@@ -77,16 +77,24 @@ if submit_button:
             FORM_ENTRIES["總價"]: str(total_price)
         }
         
+        # 偽裝成正常的瀏覽器發送請求 (避免被 Google 擋下)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+        }
+        
         # 背景發送請求給 Google 表單
         try:
-            response = requests.post(FORM_SUBMIT_URL, data=form_data)
+            response = requests.post(FORM_SUBMIT_URL, data=form_data, headers=headers)
+            
+            # Google 表單成功接收通常會回傳 200
             if response.status_code == 200:
                 st.success(f"✅ 紀錄成功！駕駛 {driver} 本次加油總花費為 **{total_price} 元**")
-                # 清除快取並重整，讓表格抓取最新資料
                 st.cache_data.clear()
                 st.rerun()
             else:
-                st.error("寫入失敗，請確認表單網址與 entry ID 是否正確。")
+                # 顯示詳細錯誤，方便我們抓蟲
+                st.error(f"寫入失敗！HTTP 狀態碼: {response.status_code}")
+                st.write(f"系統回傳內容: {response.text[:200]}")
         except Exception as e:
             st.error(f"連線錯誤: {e}")
     else:
