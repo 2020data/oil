@@ -29,12 +29,12 @@ DB_FILE = 'gas_records.db'
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
+    
+    # 1. 確保基礎表格存在
     c.execute('''
         CREATE TABLE IF NOT EXISTS records (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             時間日期 TEXT,
-            發票號碼 TEXT,
-            統編 TEXT,
             駕駛人 TEXT,
             車牌 TEXT,
             油價 REAL,
@@ -42,6 +42,18 @@ def init_db():
             總價 REAL
         )
     ''')
+    
+    # 2. 自動為舊表格擴充新欄位 (如果欄位已經存在，try-except 會自動忽略錯誤)
+    try:
+        c.execute("ALTER TABLE records ADD COLUMN 發票號碼 TEXT")
+    except sqlite3.OperationalError:
+        pass # 欄位已存在，略過
+        
+    try:
+        c.execute("ALTER TABLE records ADD COLUMN 統編 TEXT")
+    except sqlite3.OperationalError:
+        pass # 欄位已存在，略過
+
     conn.commit()
     conn.close()
 
